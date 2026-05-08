@@ -43,7 +43,14 @@ The final table uses a dynamic width calculation. It attempts to use `python3` t
 ## 🔐 Security
 
 The script uses `sshpass` to handle the root password provided at startup. The password is stored only in memory for the duration of the execution and is never written in plain text in the logs.
-All SSH commands use the `-o StrictHostKeyChecking=no` option to facilitate use on changing local networks.
+### SSH Security & Host Key Checking
+
+All SSH and SCP commands include `-o StrictHostKeyChecking=accept-new`. This provides a better balance between security and automation:
+
+*   **Rationale**: It automatically accepts and adds new host keys to your `known_hosts` file. This allows the script to remain non-interactive during the first connection to a server.
+*   **Security Benefit**: Unlike `no`, `accept-new` will still **fail** if the host key for a known server changes. This protects you from Man-in-the-middle (MITM) attacks after the initial trust is established.
+*   **Context**: This is ideal for local networks where you want ease of use without completely disabling host key verification.
+
 
 ---
 *Last updated: 05/08/2026*

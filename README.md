@@ -44,6 +44,11 @@ Or use arguments to automate:
 - `-c, --ct ID1,ID2`: List of container IDs separated by commas.
 - `-d, --dest PATH`: Local path to store backups.
 
+## 🔐 Security
+
+*   **Password Handling**: The root password is only stored in memory during execution and is never written to disk or logs.
+*   **SSH Verification**: The script uses `-o StrictHostKeyChecking=accept-new` for a balance of security and automation. It automatically trusts new hosts but alerts you if a known host's key changes. For more details, see the [technical documentation](doc.md).
+
 ## 📸 Screenshots
 
 ### Processing in progress

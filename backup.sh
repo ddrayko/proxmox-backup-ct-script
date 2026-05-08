@@ -97,9 +97,9 @@ while IFS= read -r -s -n 1 char; do
 done
 echo -e "\n"
 
-# Commands
-SSH_CMD="sshpass -p $PROXMOX_PASSWORD ssh -p $PROXMOX_PORT -o StrictHostKeyChecking=no -o ConnectTimeout=10 -q"
-SCP_CMD="sshpass -p $PROXMOX_PASSWORD scp -P $PROXMOX_PORT -o StrictHostKeyChecking=no -q"
+# Commands (Note: StrictHostKeyChecking=accept-new is used for safer non-interactive use)
+SSH_CMD="sshpass -p $PROXMOX_PASSWORD ssh -p $PROXMOX_PORT -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 -q"
+SCP_CMD="sshpass -p $PROXMOX_PASSWORD scp -P $PROXMOX_PORT -o StrictHostKeyChecking=accept-new -q"
 
 # Helpers for spinner
 proxmox_ssh() { $SSH_CMD "$PROXMOX_USER@$PROXMOX_HOST" "$1"; }
