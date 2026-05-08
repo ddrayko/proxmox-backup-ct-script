@@ -1,49 +1,49 @@
-# Documentation Technique - Proxmox Backup CLI v2
+# Technical Documentation - Proxmox Backup CLI v2
 
-Ce document détaille le fonctionnement interne du script de sauvegarde.
+This document details the internal workings of the backup script.
 
-## 🏗️ Architecture du Projet
+## 🏗️ Project Architecture
 
 ```text
 backup-proxmox-v2/
-├── backup.sh        # Script principal (Logique et boucle)
+├── backup.sh        # Main script (Logic and loop)
 ├── lib/
-│   ├── colors.sh    # Définition des couleurs ANSI et icônes
-│   └── utils.sh     # Fonctions UI (Spinner, Progress Bar, Summary)
-├── logs/            # Fichiers logs générés (format backup-date-heure.log)
-└── .assets/         # Ressources visuelles pour le README
+│   ├── colors.sh    # ANSI colors and icons definition
+│   └── utils.sh     # UI functions (Spinner, Progress Bar, Summary)
+├── logs/            # Generated log files (format backup-date-time.log)
+└── .assets/         # Visual resources for the README
 ```
 
-## 🔄 Flux de Travail (Workflow)
+## 🔄 Workflow
 
-Pour chaque container (CTID) traité, le script suit ces étapes :
+For each container (CTID) processed, the script follows these steps:
 
-1.  **Dévérouillage & Nettoyage** : S'assure que le CT n'est pas vérouillé et qu'aucun résidu d'une session précédente n'existe.
-2.  **Arrêt de la Source** : Le CT source est arrêté proprement (`pct shutdown`).
-3.  **Clonage** : Création d'un clone complet (`pct clone`) avec un ID temporaire (CTID + 9000).
-4.  **Redémarrage Source** : Le CT original est relancé immédiatement pour minimiser l'interruption de service.
-5.  **Conversion en Template** : Le clone est transformé en template Proxmox.
-6.  **Sauvegarde (VZDump)** : Génération de l'archive compressée (zstd) à partir du template.
-7.  **Téléchargement (SCP)** : Récupération du fichier `.tar.zst` sur la machine locale.
-8.  **Nettoyage final** : Suppression du template et des fichiers temporaires sur le serveur Proxmox.
+1.  **Unlock & Cleanup**: Ensures the CT is not locked and no leftovers from a previous session exist.
+2.  **Stop Source**: The source CT is gracefully shut down (`pct shutdown`).
+3.  **Cloning**: Creation of a full clone (`pct clone`) with a temporary ID (CTID + 9000).
+4.  **Restart Source**: The original CT is restarted immediately to minimize service interruption.
+5.  **Convert to Template**: The clone is transformed into a Proxmox template.
+6.  **Backup (VZDump)**: Generation of the compressed archive (zstd) from the template.
+7.  **Download (SCP)**: Retrieval of the `.tar.zst` file to the local machine.
+8.  **Final Cleanup**: Deletion of the template and temporary files on the Proxmox server.
 
-## 🎨 Interface Utilisateur (UI)
+## 🎨 User Interface (UI)
 
-L'interface repose sur plusieurs mécanismes `tput` et codes d'échappement ANSI :
+The interface relies on several `tput` mechanisms and ANSI escape codes:
 
-### Barre de progression (Sticky Bottom)
-La fonction `draw_bottom_bar` utilise `tput cup` pour se positionner systématiquement sur la dernière ligne du terminal. Elle est rafraîchie à chaque étape majeure.
+### Progress Bar (Sticky Bottom)
+The `draw_bottom_bar` function uses `tput cup` to systematically position itself on the last line of the terminal. It is refreshed at each major step.
 
-### Gestion du redimensionnement
-Un trap sur le signal `SIGWINCH` appelle `handle_resize`, ce qui permet de recalculer la position de la barre de progression si l'utilisateur change la taille de sa fenêtre.
+### Resize Handling
+A trap on the `SIGWINCH` signal calls `handle_resize`, which allows recalculating the progress bar's position if the user changes their window size.
 
-### Résumé Final
-Le tableau final utilise un calcul de largeur dynamique. Il tente d'utiliser `python3` pour mesurer précisément la largeur des caractères Unicode (les emojis comptant pour 2 colonnes), avec un repli (fallback) sur une mesure bash standard.
+### Final Summary
+The final table uses a dynamic width calculation. It attempts to use `python3` to precisely measure the width of Unicode characters (emojis counting as 2 columns), with a standard bash fallback.
 
-## 🔐 Sécurité
+## 🔐 Security
 
-Le script utilise `sshpass` pour gérer le mot de passe root fourni au démarrage. Le mot de passe est stocké uniquement en mémoire pendant la durée de l'exécution et n'est jamais écrit en clair dans les logs.
-Toutes les commandes SSH utilisent l'option `-o StrictHostKeyChecking=no` pour faciliter l'usage sur des réseaux locaux changeants.
+The script uses `sshpass` to handle the root password provided at startup. The password is stored only in memory for the duration of the execution and is never written in plain text in the logs.
+All SSH commands use the `-o StrictHostKeyChecking=no` option to facilitate use on changing local networks.
 
 ---
-*Dernière mise à jour : 08/05/2026*
+*Last updated: 05/08/2026*

@@ -1,53 +1,53 @@
 # Proxmox Backup CLI v2 🚀
 
-Un outil en ligne de commande moderne et élégant pour automatiser la sauvegarde de vos containers Proxmox (LXC).
+A modern and elegant command-line tool to automate the backup of your Proxmox containers (LXC).
 
 ![Banner](.assets/Capture%20d’écran%20du%202026-05-08%2020-18-53.png)
 
-## ✨ Caractéristiques
+## ✨ Features
 
-*   **Interface Premium** : Barre de progression "sticky" en bas de terminal, spinners fluides et résumé final sous forme de tableau.
-*   **Workflow Sécurisé** : Travaille sur un clone temporaire pour minimiser le temps d'arrêt du container source.
-*   **Filtrage Intelligent** : Sauvegardez tous vos containers ou ciblez-en certains par ID.
-*   **Logs Complets** : Chaque exécution est enregistrée dans le dossier `logs/`.
-*   **Résilient** : Gestion du redimensionnement du terminal et nettoyage automatique en cas d'interruption (Ctrl+C).
+*   **Premium Interface**: Sticky bottom progress bar, smooth spinners, and a final summary table.
+*   **Secure Workflow**: Operates on a temporary clone to minimize downtime of the source container.
+*   **Smart Filtering**: Backup all your containers or target specific ones by ID.
+*   **Full Logging**: Every execution is recorded in the `logs/` folder.
+*   **Resilient**: Handles terminal resizing and automatic cleanup upon interruption (Ctrl+C).
 
-## 🛠️ Prérequis
+## 🛠️ Prerequisites
 
-*   `sshpass` (pour l'authentification non-interactive)
-*   Accès SSH root sur votre serveur Proxmox.
-*   `python3` (optionnel, utilisé pour un calcul précis de la largeur du tableau final).
+*   `sshpass` (for non-interactive authentication)
+*   Root SSH access to your Proxmox server.
+*   `python3` (optional, used for precise final table width calculation).
 
 ## 🚀 Installation
 
 ```bash
-git clone https://github.com/votre-repo/backup-proxmox-v2.git
-cd backup-proxmox-v2
+git clone https://github.com/ddrayko/proxmox-backup-ct-script.git
+cd proxmox-backup-ct-script
 chmod +x backup.sh
 ```
 
-## 📖 Utilisation
+## 📖 Usage
 
-Lancez simplement le script pour le mode interactif :
+Simply run the script for interactive mode:
 ```bash
 ./backup.sh
 ```
 
-Ou utilisez les arguments pour automatiser :
+Or use arguments to automate:
 ```bash
-# Sauvegarder les CT 101 et 102 dans un dossier spécifique
-./backup.sh --ct 101,102 --dest /votre/chemin/sauvegarde
+# Backup CT 101 and 102 to a specific folder
+./backup.sh --ct 101,102 --dest /your/backup/path
 ```
 
 ### Options
-- `-h, --help` : Affiche l'aide.
-- `-c, --ct ID1,ID2` : Liste des IDs de containers séparés par des virgules.
-- `-d, --dest PATH` : Chemin local pour stocker les sauvegardes.
+- `-h, --help`: Displays help.
+- `-c, --ct ID1,ID2`: List of container IDs separated by commas.
+- `-d, --dest PATH`: Local path to store backups.
 
 ## 📸 Screenshots
 
-### En cours de traitement
+### Processing in progress
 ![Process](.assets/Capture%20d’écran%20du%202026-05-08%2020-20-15.png)
 
 ---
-*Développé avec ❤️ par Drayko*
+*Developed with ❤️ by Drayko*

@@ -31,9 +31,9 @@ run_with_spinner() {
     local duration=$((end_time - start_time))
     
     if [ $exit_code -eq 0 ]; then
-        printf "\r${SUCCESS} %s ${GREEN}Fait${RESET} (${duration}s)\n" "$msg" > /dev/tty 2>/dev/null || true
+        printf "\r${SUCCESS} %s ${GREEN}Done${RESET} (${duration}s)\n" "$msg" > /dev/tty 2>/dev/null || true
     else
-        printf "\r${ERROR} %s ${RED}Échec${RESET} (${duration}s)\n" "$msg" > /dev/tty 2>/dev/null || true
+        printf "\r${ERROR} %s ${RED}Failed${RESET} (${duration}s)\n" "$msg" > /dev/tty 2>/dev/null || true
     fi
     
     return $exit_code
@@ -70,7 +70,7 @@ draw_bottom_bar() {
     tput cup $((lines - 1)) 0 > /dev/tty 2>/dev/null
     tput el > /dev/tty 2>/dev/null
     
-    echo -ne "${BOLD}${CYAN}Progression: ${RESET}" > /dev/tty 2>/dev/null
+    echo -ne "${BOLD}${CYAN}Progress: ${RESET}" > /dev/tty 2>/dev/null
     if [ $bar_width -gt 0 ]; then
         echo -ne "[" > /dev/tty 2>/dev/null
         if [ $filled -gt 0 ]; then
@@ -130,16 +130,16 @@ show_summary() {
     bar=$(printf '═%.0s' $(seq 1 48))
 
     {
-        echo ""
-        echo -e "${BOLD}${CYAN}╔${bar}╗${RESET}"
-        echo -e "${BOLD}${CYAN}║${RESET}          ${BOLD}${CYAN}RÉSUMÉ DU BACKUP PROXMOX${RESET}            ${BOLD}${CYAN}║${RESET}"
-        echo -e "${BOLD}${CYAN}╠${bar}╣${RESET}"
-        echo -e "${BOLD}${CYAN}║${RESET}  ${SUCCESS} Succès  : ${GREEN}$(_pad "$success" 32)${RESET}${BOLD}${CYAN}║${RESET}"
-        echo -e "${BOLD}${CYAN}║${RESET}  ${ERROR} Échecs  : ${RED}$(_pad "$failed" 32)${RESET}${BOLD}${CYAN}║${RESET}"
-        echo -e "${BOLD}${CYAN}║${RESET}  ${TIME} Durée   : ${YELLOW}$(_pad "$time_str" 32)${RESET}${BOLD}${CYAN}║${RESET}"
-        echo -e "${BOLD}${CYAN}║${RESET}  ${FOLDER} Dest    : ${CYAN}$(_pad "$dest" 32)${RESET}${BOLD}${CYAN}║${RESET}"
-        echo -e "${BOLD}${CYAN}╚${bar}╝${RESET}"
-        echo ""
+        echo "" > /dev/tty
+        echo -e "${BOLD}${CYAN}╔${bar}╗${RESET}" > /dev/tty
+        echo -e "${BOLD}${CYAN}║${RESET}           ${BOLD}${CYAN}PROXMOX BACKUP SUMMARY${RESET}             ${BOLD}${CYAN}║${RESET}" > /dev/tty
+        echo -e "${BOLD}${CYAN}╠${bar}╣${RESET}" > /dev/tty
+        echo -e "${BOLD}${CYAN}║${RESET}  ${SUCCESS} Success : ${GREEN}$(_pad "$success" 32)${RESET}${BOLD}${CYAN}║${RESET}" > /dev/tty
+        echo -e "${BOLD}${CYAN}║${RESET}  ${ERROR} Failed  : ${RED}$(_pad "$failed" 32)${RESET}${BOLD}${CYAN}║${RESET}" > /dev/tty
+        echo -e "${BOLD}${CYAN}║${RESET}  ${TIME} Time    : ${YELLOW}$(_pad "$time_str" 32)${RESET}${BOLD}${CYAN}║${RESET}" > /dev/tty
+        echo -e "${BOLD}${CYAN}║${RESET}  ${FOLDER} Dest    : ${CYAN}$(_pad "$dest" 32)${RESET}${BOLD}${CYAN}║${RESET}" > /dev/tty
+        echo -e "${BOLD}${CYAN}╚${bar}╝${RESET}" > /dev/tty
+        echo "" > /dev/tty
     } > /dev/tty
     set -e
 }
@@ -150,10 +150,10 @@ show_help() {
     echo -e "Usage: $0 [options]"
     echo ""
     echo -e "${BOLD}Options:${RESET}"
-    echo -e "  -h, --help            Afficher ce menu d'aide"
-    echo -e "  -c, --ct ID1,ID2      Cibler des CT spécifiques (ex: --ct 101,105)"
-    echo -e "  -d, --dest PATH       Spécifier le dossier de destination"
+    echo -e "  -h, --help            Display this help menu"
+    echo -e "  -c, --ct ID1,ID2      Target specific CTs (ex: --ct 101,105)"
+    echo -e "  -d, --dest PATH       Specify destination folder"
     echo ""
-    echo -e "${BOLD}Exemple:${RESET}"
+    echo -e "${BOLD}Example:${RESET}"
     echo -e "  $0 --ct 101,102 --dest /mnt/backups"
 }

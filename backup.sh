@@ -21,9 +21,9 @@ cleanup_on_exit() {
     local exit_code=$?
     local line_no=$1
     if [ $exit_code -ne 0 ] && [ $exit_code -ne 130 ]; then
-        echo -e "\n${ERROR} Une erreur est survenue à la ligne $line_no (Code: $exit_code). Arrêt." > /dev/tty
+        echo -e "\n${ERROR} An error occurred at line $line_no (Code: $exit_code). Stopping." > /dev/tty
     elif [ $exit_code -eq 130 ]; then
-        echo -e "\n${WARNING} Interruption par l'utilisateur. Nettoyage..." > /dev/tty
+        echo -e "\n${WARNING} Interrupted by user. Cleaning up..." > /dev/tty
     fi
     tput cnorm > /dev/tty # Restore cursor
     exit $exit_code
@@ -49,7 +49,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         *)
-            echo -e "${ERROR} Option inconnue: $1"
+            echo -e "${ERROR} Unknown option: $1"
             show_help
             exit 1
             ;;
@@ -64,24 +64,24 @@ echo -e "${CYAN}║${RESET}            ${BOLD}PROXMOX BACKUP AUTOMATION${RESET} 
 echo -e "${CYAN}║                                               ║${RESET}"
 echo -e "${CYAN}║${RESET}                 ${PURPLE}By Drayko${RESET}                     ${CYAN}║${RESET}"
 echo -e "${CYAN}╚═══════════════════════════════════════════════╝${RESET}"
-echo -e "${INFO} Début : $(date '+%d/%m/%Y %H:%M:%S')"
+echo -e "${INFO} Started : $(date '+%m/%d/%Y %H:%M:%S')"
 echo ""
 
 # Interactive prompts
 if [[ -z "$PROXMOX_HOST" ]]; then
-    read -p "$(echo -e "${IP} IP du serveur Proxmox : ")" PROXMOX_HOST
+    read -p "$(echo -e "${IP} Proxmox server IP : ")" PROXMOX_HOST
 fi
 
-read -p "$(echo -e "${PORT} Port SSH [22] : ")" PROXMOX_PORT
+read -p "$(echo -e "${PORT} SSH Port [22] : ")" PROXMOX_PORT
 PROXMOX_PORT=${PROXMOX_PORT:-22}
 
 if [[ -z "$LOCAL_BACKUP_DIR" ]]; then
-    read -p "$(echo -e "${FOLDER} Dossier destination [ici] : ")" LOCAL_BACKUP_DIR
+    read -p "$(echo -e "${FOLDER} Destination folder [here] : ")" LOCAL_BACKUP_DIR
     LOCAL_BACKUP_DIR=${LOCAL_BACKUP_DIR:-$(pwd)}
 fi
 mkdir -p "$LOCAL_BACKUP_DIR"
 
-echo -n -e "${KEY} Mot de passe Root : "
+echo -n -e "${KEY} Root password : "
 PROXMOX_PASSWORD=""
 while IFS= read -r -s -n 1 char; do
     if [[ -z "$char" ]]; then break; fi
@@ -106,15 +106,15 @@ proxmox_ssh() { $SSH_CMD "$PROXMOX_USER@$PROXMOX_HOST" "$1"; }
 proxmox_scp() { $SCP_CMD "$PROXMOX_USER@$PROXMOX_HOST:$1" "$2"; }
 
 # Connection check
-run_with_spinner "Test connexion Proxmox" proxmox_ssh "echo OK" || {
-    echo -e "${ERROR} Détail: IP ou mot de passe incorrect."
+run_with_spinner "Proxmox connection test" proxmox_ssh "echo OK" || {
+    echo -e "${ERROR} Detail: Incorrect IP or password."
     exit 1
 }
 
 # List CTs
-echo -n -e "${WAIT} Récupération de la liste des containers... "
+echo -n -e "${WAIT} Retrieving container list... "
 RAW_CT_LIST=$($SSH_CMD "$PROXMOX_USER@$PROXMOX_HOST" "pct list | awk 'NR>1 && \$1 < 9000 {print \$1}'")
-echo -e "\r${SUCCESS} Récupération de la liste des containers... ${GREEN}Fait${RESET}"
+echo -e "\r${SUCCESS} Retrieving container list... ${GREEN}Done${RESET}"
 
 # Filtering by arguments
 if [[ -n "$TARGET_CTS" ]]; then
@@ -132,7 +132,7 @@ else
 fi
 
 if [[ -z "$CT_LIST" ]]; then
-    echo -e "${ERROR} Aucun CT correspondant trouvé."
+    echo -e "${ERROR} No matching CT found."
     exit 1
 fi
 
@@ -150,43 +150,43 @@ for CTID in $CT_LIST; do
     ((GLOBAL_CURRENT += 1))
     draw_bottom_bar
     echo -e "\n${BOLD}${BLUE}--------------------------------------${RESET}"
-    echo -e "${BACKUP} ${BOLD}Traitement CT $CTID${RESET}"
+    echo -e "${BACKUP} ${BOLD}Processing CT $CTID${RESET}"
     
     CLONE_ID=$((CTID + 9000))
     TEMPLATE_NAME="template-$CTID"
 
     # Pre-cleanup & Unlock
-    run_with_spinner "Deverrouillage" proxmox_ssh "pct unlock $CTID 2>/dev/null || true; pct unlock $CLONE_ID 2>/dev/null || true"
-    run_with_spinner "Nettoyage initial" proxmox_ssh "pct destroy $CLONE_ID --force 2>/dev/null || true; rm -f $REMOTE_DUMP_DIR/vzdump-lxc-$CLONE_ID-*.tar.zst"
+    run_with_spinner "Unlocking" proxmox_ssh "pct unlock $CTID 2>/dev/null || true; pct unlock $CLONE_ID 2>/dev/null || true"
+    run_with_spinner "Initial cleanup" proxmox_ssh "pct destroy $CLONE_ID --force 2>/dev/null || true; rm -f $REMOTE_DUMP_DIR/vzdump-lxc-$CLONE_ID-*.tar.zst"
 
     # Stop Source
-    run_with_spinner "Arrêt source" proxmox_ssh "pct shutdown $CTID --timeout 30 2>/dev/null || pct stop $CTID 2>/dev/null || true"
+    run_with_spinner "Stopping source" proxmox_ssh "pct shutdown $CTID --timeout 30 2>/dev/null || pct stop $CTID 2>/dev/null || true"
 
     # Clone
-    run_with_spinner "Clonage" proxmox_ssh "pct clone $CTID $CLONE_ID --hostname $TEMPLATE_NAME --full 1"
+    run_with_spinner "Cloning" proxmox_ssh "pct clone $CTID $CLONE_ID --hostname $TEMPLATE_NAME --full 1"
 
     # Start Source
-    run_with_spinner "Redémarrage source" proxmox_ssh "pct start $CTID 2>/dev/null || true"
+    run_with_spinner "Restarting source" proxmox_ssh "pct start $CTID 2>/dev/null || true"
 
     # Convert to Template
-    run_with_spinner "Conversion template" proxmox_ssh "pct stop $CLONE_ID 2>/dev/null || true; pct template $CLONE_ID"
+    run_with_spinner "Template conversion" proxmox_ssh "pct stop $CLONE_ID 2>/dev/null || true; pct template $CLONE_ID"
 
     # Backup
-    if ! run_with_spinner "Sauvegarde (vzdump)" proxmox_ssh "vzdump $CLONE_ID --dumpdir $REMOTE_DUMP_DIR --compress zstd --mode stop"; then
+    if ! run_with_spinner "Backup (vzdump)" proxmox_ssh "vzdump $CLONE_ID --dumpdir $REMOTE_DUMP_DIR --compress zstd --mode stop"; then
         ((FAIL_COUNT += 1))
         continue
     fi
 
     # Download
-    if ! run_with_spinner "Téléchargement" proxmox_scp "$REMOTE_DUMP_DIR/vzdump-lxc-$CLONE_ID-*.tar.zst" "$LOCAL_BACKUP_DIR/"; then
+    if ! run_with_spinner "Downloading" proxmox_scp "$REMOTE_DUMP_DIR/vzdump-lxc-$CLONE_ID-*.tar.zst" "$LOCAL_BACKUP_DIR/"; then
         ((FAIL_COUNT += 1))
         continue
     fi
 
     # Post-cleanup
-    run_with_spinner "Nettoyage final" proxmox_ssh "rm -f $REMOTE_DUMP_DIR/vzdump-lxc-$CLONE_ID-*.tar.zst; pct destroy $CLONE_ID --force"
+    run_with_spinner "Final cleanup" proxmox_ssh "rm -f $REMOTE_DUMP_DIR/vzdump-lxc-$CLONE_ID-*.tar.zst; pct destroy $CLONE_ID --force"
 
-    echo -e "${DONE} ${BOLD}CT $CTID terminé avec succès${RESET}"
+    echo -e "${DONE} ${BOLD}CT $CTID completed successfully${RESET}"
     ((SUCCESS_COUNT += 1))
 done
 
